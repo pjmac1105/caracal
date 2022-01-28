@@ -2102,19 +2102,20 @@ def worker(pipeline, recipe, config):
             gain_table_name = [table.split('output/')[-1] for table in tables]
             step = f'plot-cubical_{ga}_table'
 
-            recipe.add('cab/cubical_pgs', step,
-            {
-                "files": [tab+":output" for tab in gain_table_name],
-                gains[gain.lower()]: True,
-                "nrow": 7,
-                "ncol": 10,
-                "dir": direction,
-                "output-name": '{0:s}/{1:s}/{2:s}_self-cal_{3:s}_gain_plots'.format(
-                    get_dir_path(pipeline.diagnostic_plots, pipeline), 'selfcal', prefix, ga)
-            },
-            input=pipeline.input,
-            output=pipeline.output,
-            label='{0:s}:: Plot gain table : {1:s}'.format(step, ' '.join(tables)))
+            for g_table in [tab+":output" for tab in gain_table_name]:
+                recipe.add('cab/cubical_pgs', step,
+                {
+                    "files": g_table,
+                    gains[gain.lower()]: True,
+                    "nrow": 7,
+                    "ncol": 10,
+                    "dir": direction,
+                    "output-name": '{0:s}/{1:s}/{2:s}_self-cal_{3:s}_gain_plots'.format(
+                        get_dir_path(pipeline.diagnostic_plots, pipeline), 'selfcal', prefix, ga)
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Plot gain table : {1:s}'.format(step, g_table))
 
 
     # decide which tool to use for calibration
