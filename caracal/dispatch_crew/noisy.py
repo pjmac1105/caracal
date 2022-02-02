@@ -40,6 +40,8 @@ def ProcessSingleMS(ms,kB,tsyseff,tsyseffFile,Aant,selectFieldName,verbose=0):
     if verbose>1:
         caracal.log.info('    Processing MS file {0:s}'.format(ms))
     t=tables.table(ms,ack=False)
+    table.setmaxcachesize('FLAG', 1024**3)
+    print('This is to show that it worked')
     fieldIDs=t.getcol('FIELD_ID')
     ant1=t.getcol('ANTENNA1')
     ant2=t.getcol('ANTENNA2')
