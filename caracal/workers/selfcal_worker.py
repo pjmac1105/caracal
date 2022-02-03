@@ -2074,8 +2074,6 @@ def worker(pipeline, recipe, config):
         #     output=pipeline.output,
         #     label='{0:s}:: Plot gain table(s) : {1:s}'.format(step, ' '.join(tables)))
 
-
-    
     def cubical_plotting_cubical_tables(gain, direction):
         """
         Plot solutions with the cubical plot-gain-solutions plotter
@@ -2091,9 +2089,9 @@ def worker(pipeline, recipe, config):
         gains = dict(k="gain", g="gain", b="bandpass", de="gain", d="leakage")
         
         for ga in gain.split(","):
-            sstring = '{0:s}/{1:s}/{2:s}/{3:s}'.format(
+            sstring = os.path.join(
                 pipeline.output, get_dir_path(pipeline.continuum, pipeline),
-                'selfcal_products', f'*-{ga}*-gains*.parmdb')
+                'selfcal_products', f'{prefix}*-{ga}*-gains*.parmdb')
             tables = glob.glob(sstring)
             
             if len(tables)==0:
@@ -2102,20 +2100,25 @@ def worker(pipeline, recipe, config):
             gain_table_name = [table.split('output/')[-1] for table in tables]
             step = f'plot-cubical_{ga}_table'
 
-            for g_table in [tab+":output" for tab in gain_table_name]:
+            for g_table in [tab for tab in gain_table_name]:
                 recipe.add('cab/cubical_pgs', step,
                 {
-                    "files": g_table,
+                    "files": g_table+":output",
                     gains[gain.lower()]: True,
                     "nrow": 7,
                     "ncol": 10,
                     "dir": direction,
-                    "output-name": '{0:s}/{1:s}/{2:s}_self-cal_{3:s}_gain_plots'.format(
-                        get_dir_path(pipeline.diagnostic_plots, pipeline), 'selfcal', prefix, ga)
+                    "output-name": os.path.join(
+                        get_dir_path(pipeline.diagnostic_plots, pipeline),
+                        "selfcal", 
+                        "{0:s}_selfcal_gain_plots-{1:s}".format(
+                            prefix, os.path.splitext(os.path.basename(g_table))[0])
+                        )
                 },
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Plot gain table : {1:s}'.format(step, g_table))
+        recipe.run()
 
 
     # decide which tool to use for calibration
@@ -2223,6 +2226,21 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'aimfast'):
                 image_quality_assessment(
                     self_cal_iter_counter, get_dir_path(image_path, pipeline), field)
+            if pipeline.enable_task(config, 'calibrate'):
+                plot_gains = config['cal_cubical']['plot_gains']
+                if plot_gains["enable"]:
+                    plot_path = os.path.join(pipeline.diagnostic_plots, 'selfcal')
+                    if not os.path.exists(plot_path):
+                        os.mkdir(plot_path)
+                    #contains functions for the associated plotters
+                    plotters = {
+                            "cubical": cubical_plotting_cubical_tables,
+                            "ragavi": ragavi_plotting_cubical_tables
+                        }
+                    #call the plotter's function
+                    plotters.get(plot_gains['plotter'])(
+                        plot_gains['gaintype'], plot_gains['direction'])
+
 
         # Copy plots from the selfcal_products to the diagnotic plots IF calibrate OR transfer_gains is enabled
         if pipeline.enable_task(config, 'calibrate') or pipeline.enable_task(config, 'transfer_apply_gains'):
@@ -2265,17 +2283,7 @@ def worker(pipeline, recipe, config):
                     shutil.copyfile(plot, '{0:s}/{1:s}'.format(plot_path, os.path.basename(plot)))
                     os.remove(plot)
 
-        if pipeline.enable_task(config, 'calibrate'):
-            plot_gains = config['cal_cubical']['plot_gains']
-            if plot_gains["enable"]:
-                #contains functions for the associated plotters
-                plotters = {
-                        "cubical": cubical_plotting_cubical_tables,
-                        "ragavi": ragavi_plotting_cubical_tables
-                    }
-                #call the plotter's function
-                plotters.get(plot_gains['plotter'])(
-                    plot_gains['gaintype'], plot_gains['direction'])
+
         
         if pipeline.enable_task(config, 'restore_model'):
             if config['restore_model']['model']:
