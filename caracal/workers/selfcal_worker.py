@@ -2030,7 +2030,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label="Plotting source residuals comparisons")
 
-    def ragavi_plotting_cubical_tables(gain, direction):
+    def ragavi_plotting_cubical_tables(gain, direction, **kwargs):
         """
         Plot solutions with the new cubical-compatible ragavi
         Parameters
@@ -2043,7 +2043,7 @@ def worker(pipeline, recipe, config):
 
         caracal.log.warning("RAGaVi plotting for cubical is not yet implemented")
         caracal.log.info("Reverting to 'cubical'")
-        cubical_plotting_cubical_tables(gain, direction)
+        cubical_plotting_cubical_tables(gain, direction, **kwargs)
 
         # #split the comma separated gains
         # gain = gain.lower().replace(" ", "")
@@ -2074,7 +2074,7 @@ def worker(pipeline, recipe, config):
         #     output=pipeline.output,
         #     label='{0:s}:: Plot gain table(s) : {1:s}'.format(step, ' '.join(tables)))
 
-    def cubical_plotting_cubical_tables(gain, direction):
+    def cubical_plotting_cubical_tables(gain, direction, **kwargs):
         """
         Plot solutions with the cubical plot-gain-solutions plotter
         Parameters
@@ -2087,6 +2087,13 @@ def worker(pipeline, recipe, config):
         #split the comma separated gains
         gain = gain.lower().replace(" ", "")
         gains = dict(k="gain", g="gain", b="bandpass", de="gain", d="leakage")
+
+        if "axis_limits" in kwargs:
+            axis_limits = { 
+                limit.replace("_", "-"): values 
+                for limit, values in kwargs["axis_limits"].items()}
+        else:
+            axis_limits = {}
         
         for ga in gain.split(","):
             sstring = os.path.join(
@@ -2101,8 +2108,7 @@ def worker(pipeline, recipe, config):
             step = f'plot-cubical_{ga}_table'
 
             for g_table in [tab for tab in gain_table_name]:
-                recipe.add('cab/cubical_pgs', step,
-                {
+                opts =  {
                     "files": g_table+":output",
                     gains[gain.lower()]: True,
                     "nrow": 7,
@@ -2114,7 +2120,9 @@ def worker(pipeline, recipe, config):
                         "{0:s}_selfcal_gain_plots-{1:s}".format(
                             prefix, os.path.splitext(os.path.basename(g_table))[0])
                         )
-                },
+                }
+                opts.update(axis_limits)
+                recipe.add('cab/cubical_pgs', step, ingreds,
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Plot gain table : {1:s}'.format(step, g_table))
@@ -2239,7 +2247,7 @@ def worker(pipeline, recipe, config):
                         }
                     #call the plotter's function
                     plotters.get(plot_gains['plotter'])(
-                        plot_gains['gaintype'], plot_gains['direction'])
+                        plot_gains['gaintype'], plot_gains['direction'], axis_limits=plot_gains['axis_limits'])
 
 
         # Copy plots from the selfcal_products to the diagnotic plots IF calibrate OR transfer_gains is enabled

@@ -340,6 +340,30 @@ mapping:
                 desc: Direction to plot. Default is '0'.
                 required: false
                 example: '0'
+              axis_limits:
+                type: map
+                desc: Set some axis limits for plotting
+                mapping:
+                  max_ampl:
+                    desc: Max amplitude axis limit
+                    type: float
+                    required: false
+                    example: '0'
+                  min_ampl:
+                    desc: Min amplitude axis limit
+                    type: float
+                    required: false
+                    example: '1'
+                  max_phase:
+                    desc: Max phase axis limit in degrees
+                    type: float
+                    required: false
+                    example: '180'
+                  max_reim:
+                    desc: Max real/imaginary axis limit
+                    type: float
+                    required: false
+                    example: '10'
       cal_meqtrees:
         desc: Parameters that only apply when using MeqTrees for the calibration.
         type: map
