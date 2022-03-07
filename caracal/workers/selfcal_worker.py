@@ -2122,7 +2122,7 @@ def worker(pipeline, recipe, config):
                         )
                 }
                 opts.update(axis_limits)
-                recipe.add('cab/cubical_pgs', step, ingreds,
+                recipe.add('cab/cubical_pgs', step, opts,
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Plot gain table : {1:s}'.format(step, g_table))
