@@ -2234,20 +2234,22 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'aimfast'):
                 image_quality_assessment(
                     self_cal_iter_counter, get_dir_path(image_path, pipeline), field)
-            if pipeline.enable_task(config, 'calibrate'):
-                plot_gains = config['cal_cubical']['plot_gains']
-                if plot_gains["enable"]:
-                    plot_path = os.path.join(pipeline.diagnostic_plots, 'selfcal')
-                    if not os.path.exists(plot_path):
-                        os.mkdir(plot_path)
-                    #contains functions for the associated plotters
-                    plotters = {
-                            "cubical": cubical_plotting_cubical_tables,
-                            "ragavi": ragavi_plotting_cubical_tables
-                        }
-                    #call the plotter's function
-                    plotters.get(plot_gains['plotter'])(
-                        plot_gains['gaintype'], plot_gains['direction'], axis_limits=plot_gains['axis_limits'])
+         
+            # if pipeline.enable_task(config, 'calibrate'):
+            # Enable gain plots without calibration step
+            plot_gains = config['cal_cubical']['plot_gains']
+            if plot_gains["enable"]:
+                plot_path = os.path.join(pipeline.diagnostic_plots, 'selfcal')
+                if not os.path.exists(plot_path):
+                    os.mkdir(plot_path)
+                #contains functions for the associated plotters
+                plotters = {
+                        "cubical": cubical_plotting_cubical_tables,
+                        "ragavi": ragavi_plotting_cubical_tables
+                    }
+                #call the plotter's function
+                plotters.get(plot_gains['plotter'])(
+                    plot_gains['gaintype'], plot_gains['direction'], axis_limits=plot_gains['axis_limits'])
 
 
         # Copy plots from the selfcal_products to the diagnotic plots IF calibrate OR transfer_gains is enabled
